@@ -32,12 +32,12 @@ fun HomeScreen(
     onDiseaseImageSelected: (String) -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
-    var showNoApiKeyDialog by remember { mutableStateOf(false) }
+    var showAnalysisDialog by remember { mutableStateOf(false) }
+    var isFromCamera by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val settingsDataStore = remember { SettingsDataStore(context) }
+    var showNoApiKeyDialog by remember { mutableStateOf(false) }
     var apiKey by remember { mutableStateOf<String?>(null) }
-    var showDiseaseDialog by remember { mutableStateOf(false) }
-    var selectedUri by remember { mutableStateOf<Uri?>(null) }
 
     // Gallery launcher for regular identification
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -114,13 +114,14 @@ fun HomeScreen(
             }
         }
 
-        // Camera Button
+        // Take Photo Button
         Button(
             onClick = {
                 if (apiKey.isNullOrBlank()) {
                     showNoApiKeyDialog = true
                 } else {
-                    showDiseaseDialog = true
+                    isFromCamera = true
+                    showAnalysisDialog = true
                 }
             },
             modifier = Modifier
@@ -150,14 +151,14 @@ fun HomeScreen(
             }
         }
 
-        // Gallery Button
+        // Choose from Gallery Button
         Button(
             onClick = {
                 if (apiKey.isNullOrBlank()) {
                     showNoApiKeyDialog = true
                 } else {
-                    showDiseaseDialog = true
-                    selectedUri = null
+                    isFromCamera = false
+                    showAnalysisDialog = true
                 }
             },
             modifier = Modifier
@@ -246,65 +247,65 @@ fun HomeScreen(
 
         // Add footer
         CopyrightFooter()
-    }
 
-    // Disease Analysis Dialog
-    if (showDiseaseDialog) {
-        AlertDialog(
-            onDismissRequest = { showDiseaseDialog = false },
-            title = { Text("Choose Analysis Type") },
-            text = { Text("Would you like to perform a disease-specific analysis or general plant identification?") },
-            confirmButton = {
-                Column(
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            showDiseaseDialog = false
-                            if (selectedUri != null) {
-                                onDiseaseImageSelected(selectedUri.toString())
-                            } else {
-                                onNavigateToCamera()
-                            }
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+        // Analysis Type Dialog
+        if (showAnalysisDialog) {
+            AlertDialog(
+                onDismissRequest = { showAnalysisDialog = false },
+                title = { Text("Choose Analysis Type") },
+                text = { Text("Would you like to perform a disease-specific analysis or general plant identification?") },
+                confirmButton = {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 8.dp)
                     ) {
-                        Text("Disease Analysis")
+                        Button(
+                            onClick = {
+                                showAnalysisDialog = false
+                                if (isFromCamera) {
+                                    onNavigateToCamera()
+                                } else {
+                                    diseaseGalleryLauncher.launch("image/*")
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Disease Analysis")
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                showAnalysisDialog = false
+                                if (isFromCamera) {
+                                    onNavigateToCamera()
+                                } else {
+                                    galleryLauncher.launch("image/*")
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("General Identification")
+                        }
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
-                        onClick = {
-                            showDiseaseDialog = false
-                            if (selectedUri != null) {
-                                onImageSelected(selectedUri.toString())
-                            } else {
-                                onNavigateToCamera()
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showAnalysisDialog = false }
                     ) {
-                        Text("General Identification")
+                        Text("Cancel")
                     }
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDiseaseDialog = false }
-                ) {
-                    Text("Cancel")
-                }
-            }
-        )
-    }
+            )
+        }
 
-    if (showNoApiKeyDialog) {
-        NoApiKeyDialog(
-            onDismiss = { showNoApiKeyDialog = false },
-            onNavigateToSettings = onNavigateToSettings
-        )
+        if (showNoApiKeyDialog) {
+            NoApiKeyDialog(
+                onDismiss = { showNoApiKeyDialog = false },
+                onNavigateToSettings = onNavigateToSettings
+            )
+        }
     }
 }
 

@@ -41,6 +41,8 @@ import com.thiarara.myapplicatio.ui.components.RateLimitInfo
 import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material.icons.filled.ZoomOut
 import com.thiarara.myapplicatio.ui.components.ProTips
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 
 data class DiseaseInfo(
     val plantName: String = "",
@@ -95,67 +97,69 @@ fun DiseaseResultScreen(
         val infoMap = mutableMapOf<String, StringBuilder>()
 
         for (line in sections) {
+            // Remove only asterisks (*) but keep bullet points (•)
+            val cleanLine = line.trim().replace(Regex("\\*"), "")
+            
             when {
-                line.contains("Common name:", ignoreCase = true) -> {
+                cleanLine.contains("Common name:", ignoreCase = true) -> {
                     currentSection = "plantName"
                     infoMap[currentSection] = StringBuilder()
-                    val name = line.substringAfter(":").trim()
+                    val name = cleanLine.substringAfter(":").trim()
                     if (name.isNotBlank()) {
                         infoMap[currentSection]?.append(name)
                     }
                 }
-                line.contains("Scientific name:", ignoreCase = true) -> {
+                cleanLine.contains("Scientific name:", ignoreCase = true) -> {
                     currentSection = "scientificName"
                     infoMap[currentSection] = StringBuilder()
-                    val name = line.substringAfter(":").trim()
+                    val name = cleanLine.substringAfter(":").trim()
                     if (name.isNotBlank()) {
                         infoMap[currentSection]?.append(name)
                     }
                 }
-                line.contains("Disease name:", ignoreCase = true) -> {
+                cleanLine.contains("Disease name:", ignoreCase = true) -> {
                     currentSection = "diseaseName"
                     infoMap[currentSection] = StringBuilder()
-                    val name = line.substringAfter(":").trim()
+                    val name = cleanLine.substringAfter(":").trim()
                     if (name.isNotBlank()) {
                         infoMap[currentSection]?.append(name)
                     }
                 }
-                line.contains("Severity:", ignoreCase = true) -> {
+                cleanLine.contains("Severity:", ignoreCase = true) -> {
                     currentSection = "severity"
                     infoMap[currentSection] = StringBuilder()
-                    val severity = line.substringAfter(":").trim()
+                    val severity = cleanLine.substringAfter(":").trim()
                     if (severity.isNotBlank()) {
                         infoMap[currentSection]?.append(severity)
                     }
                 }
-                line.contains("Symptoms:", ignoreCase = true) -> {
+                cleanLine.contains("Symptoms:", ignoreCase = true) -> {
                     currentSection = "symptoms"
                     infoMap[currentSection] = StringBuilder()
                 }
-                line.contains("Causes:", ignoreCase = true) -> {
+                cleanLine.contains("Causes:", ignoreCase = true) -> {
                     currentSection = "causes"
                     infoMap[currentSection] = StringBuilder()
                 }
-                line.contains("Control Measures:", ignoreCase = true) -> {
+                cleanLine.contains("Control Measures:", ignoreCase = true) -> {
                     currentSection = "controlMeasures"
                     infoMap[currentSection] = StringBuilder()
                 }
-                line.contains("Prevention:", ignoreCase = true) -> {
+                cleanLine.contains("Prevention:", ignoreCase = true) -> {
                     currentSection = "prevention"
                     infoMap[currentSection] = StringBuilder()
                 }
-                line.contains("Additional Notes:", ignoreCase = true) -> {
+                cleanLine.contains("Additional Notes:", ignoreCase = true) -> {
                     currentSection = "additionalNotes"
                     infoMap[currentSection] = StringBuilder()
                 }
-                line.isNotBlank() && currentSection.isNotEmpty() -> {
+                cleanLine.isNotBlank() && currentSection.isNotEmpty() -> {
                     if (currentSection !in listOf("plantName", "scientificName", "diseaseName", "severity")) {
-                        val cleanedLine = line.trim()
-                        if (!cleanedLine.startsWith("•") && !cleanedLine.startsWith("-")) {
+                        if (!cleanLine.startsWith("•")) {
                             infoMap[currentSection]?.append("• ")
                         }
-                        infoMap[currentSection]?.append(cleanedLine)?.append("\n")
                     }
+                    infoMap[currentSection]?.append(cleanLine)?.append("\n")
                 }
             }
         }
@@ -164,7 +168,7 @@ fun DiseaseResultScreen(
             plantName = infoMap["plantName"]?.toString()?.trim() ?: "Unknown",
             scientificName = infoMap["scientificName"]?.toString()?.trim() ?: "Unknown",
             diseaseName = infoMap["diseaseName"]?.toString()?.trim() ?: "No disease detected",
-            severity = infoMap["severity"]?.toString()?.trim() ?: "Unknown",
+            severity = infoMap["severity"]?.toString()?.trim() ?: "Not applicable",
             symptoms = infoMap["symptoms"]?.toString()?.trim() ?: "",
             causes = infoMap["causes"]?.toString()?.trim() ?: "",
             controlMeasures = infoMap["controlMeasures"]?.toString()?.trim() ?: "",
