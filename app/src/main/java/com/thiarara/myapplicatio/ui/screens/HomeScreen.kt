@@ -69,7 +69,7 @@ fun HomeScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // App Header
+        // Enhanced App Header Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,6 +77,7 @@ fun HomeScreen(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
             ),
+            elevation = CardDefaults.cardElevation(8.dp), // Increased elevation for depth
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
@@ -87,20 +88,23 @@ fun HomeScreen(
                     text = "AI Plant Identifier",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    fontSize = 24.sp // Increased font size
                 )
                 
                 Text(
                     text = "Plant & Disease Identification",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(vertical = 4.dp),
+                    fontSize = 18.sp // Increased font size
                 )
                 
                 Text(
                     text = "Version 1.0.3",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.6f),
+                    fontSize = 12.sp // Decreased font size for version
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -109,7 +113,8 @@ fun HomeScreen(
                     text = "Instantly identify plants and diagnose plant diseases using advanced AI technology",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f),
+                    fontSize = 16.sp // Increased font size
                 )
             }
         }
@@ -188,7 +193,7 @@ fun HomeScreen(
             }
         }
 
-        // Features Card
+        // Enhanced Key Features Card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -196,6 +201,7 @@ fun HomeScreen(
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer
             ),
+            elevation = CardDefaults.cardElevation(8.dp), // Increased elevation for depth
             shape = RoundedCornerShape(16.dp)
         ) {
             Column(
@@ -205,11 +211,13 @@ fun HomeScreen(
                     text = "Key Features",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    fontSize = 24.sp // Increased font size for the title
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
+                // Enhanced feature items
                 FeatureItem("Instant plant identification")
                 FeatureItem("Detailed disease analysis")
                 FeatureItem("Care instructions")
@@ -325,7 +333,9 @@ private fun FeatureItem(text: String) {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSecondaryContainer
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            fontWeight = FontWeight.Bold, // Added weight for better visibility
+            fontSize = 18.sp // Increased font size for feature items
         )
     }
 } 

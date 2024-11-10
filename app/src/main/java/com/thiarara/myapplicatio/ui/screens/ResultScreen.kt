@@ -533,7 +533,7 @@ fun ResultScreen(
 }
 
 @Composable
-fun InfoSection(
+private fun InfoSection(
     title: String,
     content: String,
     isIssueSection: Boolean = false,
@@ -554,31 +554,41 @@ fun InfoSection(
                 else -> MaterialTheme.colorScheme.primary
             }
         )
+        
         Spacer(modifier = Modifier.height(4.dp))
         
         when {
-            isProductInfo -> {
-                Column(
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.1f)
-                        )
-                        .padding(8.dp)
-                ) {
-                    Text(
-                        text = content,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
             title == "Common Name" || title == "Scientific Name" -> {
                 Text(
                     text = content,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+            }
+            title == "Characteristics" || title == "Growing Conditions" || title == "Care Instructions" -> {
+                val lines = content.split("\n")
+                Column(
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+                        )
+                        .padding(8.dp)
+                ) {
+                    lines.forEach { line ->
+                        if (line.isNotBlank()) {
+                            Text(
+                                text = line,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            if (line != lines.last()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                        }
+                    }
+                }
             }
             isIssueSection -> {
                 val lines = content.split("\n")
@@ -591,20 +601,18 @@ fun InfoSection(
                 ) {
                     lines.forEach { line ->
                         if (line.isNotBlank()) {
-                            val isControlMeasure = line.contains("control", ignoreCase = true) || 
-                                                 line.contains("treatment", ignoreCase = true) ||
-                                                 line.contains("solution", ignoreCase = true) ||
-                                                 line.contains("prevent", ignoreCase = true) ||
-                                                 line.contains("manage", ignoreCase = true)
-                            
                             Text(
                                 text = line,
                                 fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = when {
-                                    isControlMeasure -> Color(0xFF2E7D32)
+                                    line.contains("control", ignoreCase = true) || 
+                                    line.contains("treatment", ignoreCase = true) ||
+                                    line.contains("solution", ignoreCase = true) ||
+                                    line.contains("prevent", ignoreCase = true) ||
+                                    line.contains("manage", ignoreCase = true) -> Color(0xFF2E7D32)
                                     else -> Color(0xFFD32F2F)
-                                },
-                                fontWeight = FontWeight.Medium
+                                }
                             )
                             if (line != lines.last()) {
                                 Spacer(modifier = Modifier.height(4.dp))
@@ -617,12 +625,12 @@ fun InfoSection(
                 Text(
                     text = content,
                     fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
         
         Spacer(modifier = Modifier.height(8.dp))
-        Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
     }
 }

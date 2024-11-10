@@ -362,6 +362,15 @@ fun DiseaseResultScreen(
                     )
                 }
 
+                // Add RateLimitInfo display here
+                if (showRateLimit) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    RateLimitInfo(
+                        remainingRequests = remainingRequests,
+                        initialTimeUntilReset = timeUntilReset
+                    )
+                }
+
                 diseaseInfo?.let { info ->
                     // Show disease analysis results
                     Card(
@@ -430,9 +439,11 @@ fun DiseaseResultScreen(
                             )
                             
                             if (info.additionalNotes.isNotBlank()) {
-                                InfoSection(
-                                    title = "Additional Notes",
-                                    content = info.additionalNotes
+                                Text(
+                                    text = info.additionalNotes,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -549,7 +560,7 @@ private fun InfoSection(
             color = when {
                 isDisease -> MaterialTheme.colorScheme.error
                 isSeverity -> getSeverityColor(content)
-                isControlMeasures || isPrevention -> Color(0xFF2E7D32) // Success green
+                isControlMeasures || isPrevention -> Color(0xFF2E7D32)
                 isSymptoms -> MaterialTheme.colorScheme.error
                 else -> MaterialTheme.colorScheme.primary
             }
@@ -561,16 +572,16 @@ private fun InfoSection(
             title == "Plant Name" || title == "Scientific Name" || title == "Disease Name" -> {
                 Text(
                     text = content,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
             isSeverity -> {
                 Text(
                     text = content,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
                     color = getSeverityColor(content)
                 )
             }
@@ -591,6 +602,7 @@ private fun InfoSection(
                             Text(
                                 text = line,
                                 fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
                                 color = when {
                                     isSymptoms -> MaterialTheme.colorScheme.error
                                     isControlMeasures || isPrevention -> Color(0xFF2E7D32)
@@ -608,13 +620,13 @@ private fun InfoSection(
                 Text(
                     text = content,
                     fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
         
         Spacer(modifier = Modifier.height(8.dp))
-        Divider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
     }
 }
 
