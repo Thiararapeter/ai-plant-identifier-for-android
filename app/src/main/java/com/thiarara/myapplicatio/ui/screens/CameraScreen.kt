@@ -8,62 +8,103 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import android.Manifest
-import android.content.ContentValues
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import android.util.Log
-import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getMainExecutor
-import androidx.lifecycle.LifecycleOwner
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.layout.ContentScale
 import coil.compose.rememberAsyncImagePainter
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
-import java.util.concurrent.Executor
 import androidx.core.content.FileProvider
-import android.content.ContentResolver
 import android.content.Intent
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.GridOn
-import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.FlashOff
-import androidx.camera.core.ImageCapture.FLASH_MODE_AUTO
-import androidx.camera.core.ImageCapture.FLASH_MODE_ON
-import androidx.camera.core.ImageCapture.FLASH_MODE_OFF
+import androidx.compose.material.icons.filled.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.FlashAuto
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import com.thiarara.myapplicatio.data.SettingsDataStore
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.BugReport
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+
+// Import ViewGroup
+import android.view.ViewGroup
+
+// Keep these imports for flash mode constants
+import androidx.camera.core.ImageCapture.FLASH_MODE_AUTO
+import androidx.camera.core.ImageCapture.FLASH_MODE_ON
+import androidx.camera.core.ImageCapture.FLASH_MODE_OFF
+
+// Import OutputFileOptions and OnImageSavedCallback
+import androidx.camera.core.ImageCapture.OutputFileOptions
+import androidx.camera.core.ImageCapture.OnImageSavedCallback
+
+@Composable
+private fun TipItem(text: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.CheckCircle,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
+@Composable
+private fun GridOverlay() {
+    Canvas(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        val strokeWidth = 1.dp.toPx()
+        
+        // Draw vertical lines
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(size.width / 3f, 0f),
+            end = Offset(size.width / 3f, size.height),
+            strokeWidth = strokeWidth
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(2 * size.width / 3f, 0f),
+            end = Offset(2 * size.width / 3f, size.height),
+            strokeWidth = strokeWidth
+        )
+        
+        // Draw horizontal lines
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(0f, size.height / 3f),
+            end = Offset(size.width, size.height / 3f),
+            strokeWidth = strokeWidth
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.5f),
+            start = Offset(0f, 2 * size.height / 3f),
+            end = Offset(size.width, 2 * size.height / 3f),
+            strokeWidth = strokeWidth
+        )
+    }
+}
 
 @Composable
 fun CameraScreen(
@@ -75,17 +116,19 @@ fun CameraScreen(
     val settingsDataStore = remember { SettingsDataStore(context) }
     val scope = rememberCoroutineScope()
     
-    // State variables
+    // State variables using appropriate mutable state
     var showGridLines by remember { mutableStateOf(true) }
-    var showTips by remember { mutableStateOf(true) }
+    var showTips by remember { mutableStateOf(false) }
     var flashMode by remember { mutableStateOf(FLASH_MODE_AUTO) }
-    var imageCapture: ImageCapture? by remember { mutableStateOf(null) }
+    var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var capturedPhotoUri by remember { mutableStateOf<String?>(null) }
     var showError by remember { mutableStateOf<String?>(null) }
+    
+    // Transform gesture states
     var scale by remember { mutableStateOf(1f) }
     var offsetX by remember { mutableStateOf(0f) }
     var offsetY by remember { mutableStateOf(0f) }
-    
+
     // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -97,11 +140,11 @@ fun CameraScreen(
 
     // Load settings
     LaunchedEffect(Unit) {
-        settingsDataStore.showGrid.collect { showGrid ->
-            showGridLines = showGrid
+        settingsDataStore.showGrid.collect { showGrid -> 
+            showGridLines = showGrid 
         }
-        settingsDataStore.showTips.collect { tips ->
-            showTips = tips
+        settingsDataStore.showTips.collect { tips -> 
+            showTips = tips 
         }
     }
 
@@ -168,32 +211,38 @@ fun CameraScreen(
                 if (showGridLines) {
                     GridOverlay()
                 }
-                
-                // Photography tips
+
+                // Photography Tips Card
                 if (showTips) {
-                    Column(
+                    Card(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .fillMaxWidth()
-                            .background(Color.Black.copy(alpha = 0.3f))
                             .padding(16.dp)
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                        )
                     ) {
-                        Text(
-                            text = "Photography Tips:",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "• Center the plant in frame\n" +
-                                  "• Ensure good lighting\n" +
-                                  "• Keep the camera steady\n" +
-                                  "• Focus on distinctive features",
-                            color = Color.White,
-                            fontSize = 12.sp
-                        )
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "Photography Tips",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            TipItem("Ensure good lighting")
+                            TipItem("Keep the camera steady")
+                            TipItem("Focus on distinctive features")
+                            TipItem("Include multiple parts of the plant")
+                            TipItem("Avoid shadows on the subject")
+                            TipItem("Get close, but maintain focus")
+                            TipItem("Use a plain background if possible")
+                        }
                     }
                 }
-                
+
                 // Bottom controls
                 Row(
                     modifier = Modifier
@@ -258,13 +307,12 @@ fun CameraScreen(
                                         createNewFile()
                                     }
 
-                                    val outputOptions = ImageCapture.OutputFileOptions.Builder(photoFile)
-                                        .build()
+                                    val outputOptions = OutputFileOptions.Builder(photoFile).build()
 
                                     imageCaptureInstance.takePicture(
                                         outputOptions,
                                         getMainExecutor(context),
-                                        object : ImageCapture.OnImageSavedCallback {
+                                        object : OnImageSavedCallback {
                                             override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                                                 try {
                                                     val contentUri = FileProvider.getUriForFile(
@@ -321,13 +369,9 @@ fun CameraScreen(
                         )
                     }
 
-                    // Tips toggle
+                    // Tips toggle button
                     IconButton(
-                        onClick = {
-                            scope.launch {
-                                settingsDataStore.saveShowTips(!showTips)
-                            }
-                        },
+                        onClick = { showTips = !showTips },
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
@@ -395,7 +439,7 @@ fun CameraScreen(
                         
                         Button(
                             onClick = {
-                                capturedPhotoUri?.let { uri ->
+                                capturedPhotoUri?.let { uri -> 
                                     onImageCaptured(uri, false)
                                 }
                             }
@@ -408,7 +452,7 @@ fun CameraScreen(
 
                     Button(
                         onClick = {
-                            capturedPhotoUri?.let { uri ->
+                            capturedPhotoUri?.let { uri -> 
                                 onImageCaptured(uri, true)
                             }
                         },
@@ -440,49 +484,12 @@ fun CameraScreen(
         AlertDialog(
             onDismissRequest = { showError = null },
             title = { Text("Error") },
-            text = { Text(showError!!) },
+            text = { Text(text = showError ?: "") },
             confirmButton = {
                 Button(onClick = { showError = null }) {
                     Text("OK")
                 }
             }
-        )
-    }
-}
-
-@Composable
-private fun GridOverlay() {
-    Canvas(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        val strokeWidth = 1.dp.toPx()
-        
-        // Draw vertical lines
-        drawLine(
-            color = Color.White.copy(alpha = 0.5f),
-            start = Offset(size.width / 3f, 0f),
-            end = Offset(size.width / 3f, size.height),
-            strokeWidth = strokeWidth
-        )
-        drawLine(
-            color = Color.White.copy(alpha = 0.5f),
-            start = Offset(2 * size.width / 3f, 0f),
-            end = Offset(2 * size.width / 3f, size.height),
-            strokeWidth = strokeWidth
-        )
-        
-        // Draw horizontal lines
-        drawLine(
-            color = Color.White.copy(alpha = 0.5f),
-            start = Offset(0f, size.height / 3f),
-            end = Offset(size.width, size.height / 3f),
-            strokeWidth = strokeWidth
-        )
-        drawLine(
-            color = Color.White.copy(alpha = 0.5f),
-            start = Offset(0f, 2 * size.height / 3f),
-            end = Offset(size.width, 2 * size.height / 3f),
-            strokeWidth = strokeWidth
         )
     }
 }
